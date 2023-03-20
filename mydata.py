@@ -41,4 +41,4 @@ data = MyDataset(txtpath)
 data_loader = DataLoader(data, batch_size=2,shuffle=True,num_workers=0)
 
 for pics,label in data_loader:
-    print(pics,label)
+    print(pics,label,"space")
