@@ -38,7 +38,7 @@ class MyDataset(Dataset):
 #实例化对象
 data = MyDataset(txtpath)
 
-data_loader = DataLoader(data, batch_size=2,shuffle=True,num_workers=0)
+data_loader = DataLoader(data, batch_size=1,shuffle=True,num_workers=0)
 
 for pics,label in data_loader:
-    print(pics,label,"space")
+    print(pics,label)
