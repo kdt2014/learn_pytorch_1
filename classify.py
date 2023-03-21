@@ -46,3 +46,8 @@ pred_probab = nn.Softmax(dim=1)(logits)#将类别的概率归一化
 print(pred_probab)
 y_pred = pred_probab.argmax(1)#返回最大值所在地索引
 print(f"Predicted class: {y_pred}")#输出最大值索引
+
+print(f"Model structure: {model}\n\n")
+
+for name, param in model.named_parameters():
+    print(f"Layer: {name} | Size: {param.size()} | Values : {param[:2]} \n")
