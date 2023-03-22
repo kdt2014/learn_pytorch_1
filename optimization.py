@@ -5,7 +5,7 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor, Lambda
 import time
 
-batchsize = 10
+batchsize = 64
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 
