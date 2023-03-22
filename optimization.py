@@ -3,9 +3,11 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor, Lambda
+import time
 
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-# print(f"Using {device} device")
+batchsize = 10
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"Using {device} device")
 
 training_data = datasets.FashionMNIST(
     root = "data",
@@ -21,8 +23,8 @@ test_data = datasets.FashionMNIST(
     transform = ToTensor()
 )
 
-train_dataloader = DataLoader(training_data, batch_size=64)
-test_dataloader = DataLoader(test_data, batch_size=64)
+train_dataloader = DataLoader(training_data, batch_size=batchsize, shuffle=True, num_workers=0, pin_memory=True)
+test_dataloader = DataLoader(test_data, batch_size=batchsize,shuffle=True, num_workers=0, pin_memory=True)
 
 class MyNetwork(nn.Module):
     def __init__(self):
@@ -41,19 +43,21 @@ class MyNetwork(nn.Module):
         logits = self.linear_relu_stack(x)
         return logits
 
-model = MyNetwork()
+model = MyNetwork().to(device)#将实例化后的模型传递给设置好的设备并赋值给model
 print(model)
-
-
-
-# Initialize the loss function
-
+# We move our tensor to the GPU if available
+# if torch.cuda.is_available():
+#     train_dataloader = train_dataloader.to("cuda")
+#     test_dataloader = test_dataloader.to("cuda")
 
 # 定义train_loop循环优化代码
 def train_loop(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)  # 获取训练数据集总数大小
     for batch, (X, y) in enumerate(dataloader):  # 从数据加载器中获取批次个数，图像数据和对应标签, batch是一个从0开始增加，直到dataloader最后一个数的序号
         # Compute prediction and loss
+        # We move our tensor to the GPU if available
+        if torch.cuda.is_available():
+            X,y = X.to("cuda"), y.to("cuda")
         pred = model(X)  # 将图像数据通过训练模型
         loss = loss_fn(pred, y)  # 计算预测值和真实值的误差大小
 
@@ -69,11 +73,16 @@ def train_loop(dataloader, model, loss_fn, optimizer):
 # 定义test_loop评估模型的性能。
 def test_loop(dataloader, model, loss_fn):
     size = len(dataloader.dataset)  # 获取测试数据集总数大小
+
     num_batches = len(dataloader)  # 获取测试样本数据集中的组数，10000/64=157
     test_loss, correct = 0, 0  # 将之前的测试误差和准确率清零
 
     with torch.no_grad():  # 禁用梯度计算
         for X, y in dataloader:  # 从数据加载器中获取图像数据和对应标签
+            # We move our tensor to the GPU if available
+            if torch.cuda.is_available():
+                X,y= X.to("cuda"), y.to("cuda")
+
             pred = model(X)
             test_loss += loss_fn(pred, y).item()  # 计算预测值和真实值的误差大小，此时的测试误差是所有样本数据的误差
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()  # 累加所有测试数据中预测正确的样本个数
@@ -87,12 +96,20 @@ def test_loop(dataloader, model, loss_fn):
     print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
 learning_rate = 1e-3 #学习率
-loss_fn = nn.CrossEntropyLoss()
+loss_fn = nn.CrossEntropyLoss()  # Initialize the loss function
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 epochs = 10
+
+start_time = time.time()
 
 for t in range(epochs):
     print(f"Epoch {t + 1}\n-------------------------------")
     train_loop(train_dataloader, model, loss_fn, optimizer)  # 输入参数，进行训练
     test_loop(test_dataloader, model, loss_fn)  # 输入参数，进行测试
+
+end_time = time.time()
+total_time = end_time - start_time
+print(f"Total training time: {total_time:.2f} seconds")
+
+torch.save(model, "model1.pth")
 print("Done!")
