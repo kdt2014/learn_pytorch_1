@@ -23,8 +23,8 @@ test_data = datasets.FashionMNIST(
     transform = ToTensor()
 )
 
-train_dataloader = DataLoader(training_data, batch_size=batchsize, shuffle=True, num_workers=0, pin_memory=True)
-test_dataloader = DataLoader(test_data, batch_size=batchsize,shuffle=True, num_workers=0, pin_memory=True)
+train_dataloader = DataLoader(training_data, batch_size=batchsize, shuffle=True, num_workers=5, pin_memory=False)
+test_dataloader = DataLoader(test_data, batch_size=batchsize,shuffle=True, num_workers=5, pin_memory=False)
 
 class MyNetwork(nn.Module):
     def __init__(self):
