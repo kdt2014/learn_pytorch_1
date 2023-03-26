@@ -6,6 +6,7 @@ from torchvision.transforms import ToTensor, Lambda
 import time
 
 batchsize = 64
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 
@@ -24,8 +25,8 @@ test_data = datasets.FashionMNIST(
 )
 
 # 将训练和测试数据全部放入GPU显存，以后的每次训练和测试直接从GPU中加载数据，省略了大量倒腾数据的时间
-train_images, train_labels = training_data.data, training_data.targets
-test_images, test_labels = test_data.data, test_data.targets
+train_images, train_labels = training_data.data.to('cuda'), training_data.targets.to('cuda')
+test_images, test_labels = test_data.data.to('cuda'), test_data.targets.to('cuda')
 
 # Reshape the images to 1D tensors and normalize
 train_images = train_images.view(train_images.size(0), -1) / 255.
@@ -35,19 +36,24 @@ test_images = test_images.view(test_images.size(0), -1) / 255.
 train_dataset = torch.utils.data.TensorDataset(train_images, train_labels)
 test_dataset = torch.utils.data.TensorDataset(test_images, test_labels)
 
-train_loader = DataLoader(train_dataset, batch_size=batchsize, shuffle=False, num_workers=5, pin_memory=True)
-test_loader = DataLoader(test_dataset, batch_size=batchsize,shuffle=False, num_workers=5, pin_memory=True)
+# Create data loaders
+# batch_size = len(train_dataset)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batchsize, shuffle=False)
+# batch_size = len(test_dataset)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batchsize, shuffle=False)
 
 class MyNetwork(nn.Module):
     def __init__(self):
         super(MyNetwork, self).__init__()
         # self.flatten = nn.Flatten()
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(28*28, 512),
+            nn.Linear(28*28, 128),
             nn.ReLU(),
-            nn.Linear(512,512),
-            nn.ReLU(),
-            nn.Linear(512,10)
+            nn.Linear(128, 10),
+            nn.Softmax(dim=1)
+
+            # nn.ReLU(),
+            # nn.Linear(512,10)
         )
 
     def forward(self, x):
@@ -55,14 +61,10 @@ class MyNetwork(nn.Module):
         logits = self.linear_relu_stack(x)
         return logits
 
-model = MyNetwork().to(device)#将实例化后的模型传递给设置好的设备并赋值给model
+model = MyNetwork().to(device) #将实例化后的模型传递给设置好的设备并赋值给model
 print(model)
-# We move our tensor to the GPU if available
-# if torch.cuda.is_available():
-#     train_dataloader = train_dataloader.to("cuda")
-#     test_dataloader = test_dataloader.to("cuda")
 
-# 定义train_loop循环优化代码
+
 def train_loop(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)  # 获取训练数据集总数大小
     for batch, (X, y) in enumerate(dataloader):  # 从数据加载器中获取批次个数，图像数据和对应标签, batch是一个从0开始增加，直到dataloader最后一个数的序号
@@ -109,8 +111,8 @@ def test_loop(dataloader, model, loss_fn):
 
 learning_rate = 1e-3 #学习率
 loss_fn = nn.CrossEntropyLoss()  # Initialize the loss function
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
-epochs = 13
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+epochs = 50
 
 start_time = time.time()
 
@@ -121,7 +123,7 @@ test_loop(test_loader, model, loss_fn)  # 输入参数，进行测试
 
 end_time = time.time()
 total_time = end_time - start_time
-print(f"Total training time: {total_time:.2f} seconds")
+print(f"Total time: {total_time:.2f} seconds")
 
 torch.save(model, "model1.pth")
 print("Done!")

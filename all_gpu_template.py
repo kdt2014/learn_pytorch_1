@@ -51,7 +51,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 start_time = time.time()
 # Train the model
-for epoch in range(45):
+for epoch in range(400):
     for inputs, targets in train_loader:
         optimizer.zero_grad()
         outputs = model(inputs)

@@ -23,35 +23,22 @@ test_data = datasets.FashionMNIST(
     transform = ToTensor()
 )
 
-# 将训练和测试数据全部放入GPU显存，以后的每次训练和测试直接从GPU中加载数据，省略了大量倒腾数据的时间
-train_images, train_labels = training_data.data, training_data.targets
-test_images, test_labels = test_data.data, test_data.targets
-
-# Reshape the images to 1D tensors and normalize
-train_images = train_images.view(train_images.size(0), -1) / 255.
-test_images = test_images.view(test_images.size(0), -1) / 255.
-
-# Combine images and labels into TensorDatasets
-train_dataset = torch.utils.data.TensorDataset(train_images, train_labels)
-test_dataset = torch.utils.data.TensorDataset(test_images, test_labels)
-
-train_loader = DataLoader(train_dataset, batch_size=batchsize, shuffle=False, num_workers=5, pin_memory=True)
-test_loader = DataLoader(test_dataset, batch_size=batchsize,shuffle=False, num_workers=5, pin_memory=True)
+train_dataloader = DataLoader(training_data, batch_size=batchsize, shuffle=False, num_workers=5, pin_memory=True)
+test_dataloader = DataLoader(test_data, batch_size=batchsize,shuffle=False, num_workers=5, pin_memory=True)
 
 class MyNetwork(nn.Module):
     def __init__(self):
         super(MyNetwork, self).__init__()
-        # self.flatten = nn.Flatten()
+        self.flatten = nn.Flatten()
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(28*28, 512),
+            nn.Linear(28*28, 128),
             nn.ReLU(),
-            nn.Linear(512,512),
-            nn.ReLU(),
-            nn.Linear(512,10)
+            nn.Linear(128,10),
+            nn.Softmax(dim=1)
         )
 
     def forward(self, x):
-        # x = self.flatten(x)
+        x = self.flatten(x)
         logits = self.linear_relu_stack(x)
         return logits
 
@@ -109,15 +96,16 @@ def test_loop(dataloader, model, loss_fn):
 
 learning_rate = 1e-3 #学习率
 loss_fn = nn.CrossEntropyLoss()  # Initialize the loss function
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
-epochs = 13
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+epochs = 10
+
 
 start_time = time.time()
 
 for t in range(epochs):
     print(f"Epoch {t + 1}\n-------------------------------")
-    train_loop(train_loader, model, loss_fn, optimizer)  # 输入参数，进行训练
-test_loop(test_loader, model, loss_fn)  # 输入参数，进行测试
+    train_loop(train_dataloader, model, loss_fn, optimizer)  # 输入参数，进行训练
+test_loop(test_dataloader, model, loss_fn)  # 输入参数，进行测试
 
 end_time = time.time()
 total_time = end_time - start_time
