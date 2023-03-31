@@ -35,8 +35,8 @@ test_images = test_images.view(test_images.size(0), -1) / 255.
 train_dataset = torch.utils.data.TensorDataset(train_images, train_labels)
 test_dataset = torch.utils.data.TensorDataset(test_images, test_labels)
 
-train_loader = DataLoader(train_dataset, batch_size=batchsize, shuffle=False, num_workers=5, pin_memory=True)
-test_loader = DataLoader(test_dataset, batch_size=batchsize,shuffle=False, num_workers=5, pin_memory=True)
+train_loader = DataLoader(train_dataset, batch_size=batchsize, shuffle=False, num_workers=0, pin_memory=True)
+test_loader = DataLoader(test_dataset, batch_size=batchsize,shuffle=False, num_workers=0, pin_memory=True)
 
 class MyNetwork(nn.Module):
     def __init__(self):
@@ -110,7 +110,7 @@ def test_loop(dataloader, model, loss_fn):
 learning_rate = 1e-3 #学习率
 loss_fn = nn.CrossEntropyLoss()  # Initialize the loss function
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
-epochs = 13
+epochs = 10
 
 start_time = time.time()
 

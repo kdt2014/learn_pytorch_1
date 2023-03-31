@@ -112,7 +112,7 @@ def test_loop(dataloader, model, loss_fn):
 learning_rate = 1e-3 #学习率
 loss_fn = nn.CrossEntropyLoss()  # Initialize the loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-epochs = 50
+epochs = 10
 
 start_time = time.time()
 
